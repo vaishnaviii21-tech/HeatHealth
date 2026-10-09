@@ -1,0 +1,24 @@
+{
+  "name": "fusion",
+  "version": "1.0.0",
+  "description": "fusion project",
+  "homepage": "https://github.com/vaishnaviii21-tech/HeatHealth#readme",
+  "bugs": {
+    "url": "https://github.com/vaishnaviii21-tech/HeatHealth/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vaishnaviii21-tech/HeatHealth.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "ejs": "^7.0.1",
+    "express": "^5.2.1"
+  }
+}
