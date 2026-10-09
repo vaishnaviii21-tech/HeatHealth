@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Login | Heat-Health Risk</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="auth-page">
+
+  <header class="navbar">
+    <a href="/" class="brand">🌡️ Heat-Health Risk</a>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/login" class="active">User Login</a>
+      <a href="/admin-login">Admin Login</a>
+    </nav>
+  </header>
+
+  <main class="auth-main">
+    <section class="auth-card">
+      <div class="auth-icon">🌡️</div>
+
+      <p class="eyebrow">WELCOME BACK</p>
+      <h1>User Login</h1>
+      <p class="auth-description">
+        Sign in to explore local heat-health risks.
+      </p>
+
+      <form action="/login" method="POST">
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        >
+
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button type="submit" class="btn auth-submit">
+          Login →
+        </button>
+      </form>
+
+      <p class="auth-bottom">
+        Don't have an account?
+        <a href="/signup">Sign Up</a>
+      </p>
+
+      <a href="/" class="back-link">← Back to Home</a>
+    </section>
+  </main>
+
+</body>
+</html>
