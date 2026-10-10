@@ -20,3 +20,11 @@ npm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# Large local ML datasets
+ML-model/*.csv
+ML-model/*.parquet
+
+# ML model file will be tracked with Git LFS
+
+!ML-model/pune_today_location_inputs.csv
