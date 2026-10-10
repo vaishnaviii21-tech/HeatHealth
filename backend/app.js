@@ -1,6 +1,6 @@
 const express = require("express");
+require("dotenv").config({ path: __dirname + "/.env" });
 const connectDB = require("./config/db");
-require("dotenv").config();
 const session = require("express-session");
 const passport = require("passport");
 const axios = require("axios");
@@ -224,3 +224,4 @@ const startServer = async () => {
 };
 
 startServer();
+
