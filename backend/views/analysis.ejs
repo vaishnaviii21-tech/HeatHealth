@@ -1,0 +1,716 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heat-Health Risk Analysis</title>
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f3f7fb;
+      color: #172641;
+    }
+
+    .analysis-navbar {
+      min-height: 66px;
+      padding: 12px 28px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      border: 1px solid #e5eaf1;
+    }
+
+    .analysis-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .brand-icon {
+      color: #d93b43;
+      font-size: 29px;
+    }
+
+    .analysis-navbar nav {
+      display: flex;
+      gap: 26px;
+    }
+
+    .analysis-navbar nav a {
+      text-decoration: none;
+      color: #34435a;
+      font-size: 12px;
+    }
+
+    .analysis-main {
+      padding: 23px;
+      max-width: 1500px;
+      margin: auto;
+    }
+
+    .page-heading {
+      margin-bottom: 18px;
+    }
+
+    .page-heading h1 {
+      font-size: 23px;
+      margin: 0 0 7px;
+    }
+
+    .page-heading p {
+      margin: 0;
+      color: #68768a;
+      font-size: 14px;
+    }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: minmax(250px, 31%) minmax(0, 1fr);
+      gap: 15px;
+      align-items: stretch;
+    }
+
+    .analysis-map-card,
+    .analysis-details {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 12px rgba(26, 45, 74, .04);
+    }
+
+    #analysisMap {
+      width: 100%;
+      height: 330px;
+      background: #e9eef2;
+    }
+
+    .map-caption {
+      padding: 10px 13px;
+      color: #6b788b;
+      font-size: 11px;
+      border-top: 1px solid #e7ecf2;
+    }
+
+    .details-inner {
+      padding: 13px;
+    }
+
+    .risk-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 0 2px 13px;
+    }
+
+    .risk-header h2 {
+      font-size: 19px;
+      margin: 0;
+    }
+
+    .risk-badge {
+      background: #e33e43;
+      color: #fff;
+      border-radius: 7px;
+      padding: 10px 13px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .updated-time {
+      color: #7b8798;
+      font-size: 10px;
+      text-align: right;
+      line-height: 1.6;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .metric-card {
+      min-height: 78px;
+      padding: 13px 10px;
+      background: #f5f8fc;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .metric-icon {
+      font-size: 23px;
+      flex-shrink: 0;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      color: #68768a;
+      margin-bottom: 7px;
+    }
+
+    .metric-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: #18253b;
+      overflow-wrap: anywhere;
+    }
+
+    .insights-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 13px;
+    }
+
+    .insight-card {
+      padding: 14px;
+      border-radius: 8px;
+      min-width: 0;
+    }
+
+    .factors-card {
+      background: #fff0ef;
+    }
+
+    .precautions-card {
+      background: #eaf7ed;
+    }
+
+    .insight-card h3 {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      margin: 0 0 11px;
+    }
+
+    .factors-card h3 {
+      color: #b7353a;
+    }
+
+    .precautions-card h3 {
+      color: #277844;
+    }
+
+    .insight-card ul {
+      margin: 0;
+      padding-left: 17px;
+    }
+
+    .insight-card li {
+      font-size: 11px;
+      line-height: 1.5;
+      margin-bottom: 6px;
+      color: #344258;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      background: #18568d;
+      color: #fff;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .back-link:hover {
+      background: #10436f;
+    }
+
+    .disclaimer {
+      font-size: 10px;
+      line-height: 1.5;
+      color: #758196;
+      margin-top: 12px;
+    }
+
+    .area-label {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      color: #18253b;
+      font-size: 11px;
+      font-weight: bold;
+      text-shadow: 0 0 3px white, 1px 1px 3px white;
+    }
+
+    .area-label::before {
+      display: none;
+    }
+
+    @media (max-width: 850px) {
+      .analysis-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #analysisMap {
+        height: 300px;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .analysis-navbar {
+        padding: 12px;
+        flex-wrap: wrap;
+      }
+
+      .analysis-brand {
+        font-size: 15px;
+      }
+
+      .analysis-navbar nav {
+        gap: 15px;
+      }
+
+      .analysis-main {
+        padding: 12px;
+      }
+
+      .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .insights-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .risk-header h2 {
+        font-size: 17px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="analysis-navbar">
+    <div class="analysis-brand">
+      <span class="brand-icon">♨</span>
+      <span>Hyperlocal Heat-Health Risk Prediction</span>
+    </div>
+
+    <nav>
+      <a href="/">Home</a>
+      <a href="/map">Map</a>
+      <a href="/login">Logout</a>
+    </nav>
+  </header>
+
+  <main class="analysis-main">
+
+    <section class="page-heading">
+      <h1>Heat-Health Risk Analysis</h1>
+      <p>Detailed information for the selected area</p>
+    </section>
+
+    <section class="analysis-grid">
+
+      <!-- Left: GeoJSON area map -->
+      <div class="analysis-map-card">
+        <div id="analysisMap"></div>
+        <div class="map-caption">
+          Selected area: <strong id="mapAreaName"><%= selectedArea %></strong>
+        </div>
+      </div>
+
+      <!-- Right: Analysis details -->
+      <div class="analysis-details">
+        <div class="details-inner">
+
+          <div class="risk-header">
+           <h2>
+            <span id="headingArea"><%= selectedArea %></span>,
+            <%= city || "Pune, Maharashtra" %>
+        </h2>
+
+            <!-- <button type="button" class="risk-badge" id="riskBadge">
+            <%= riskLevel %> Risk
+        </button> -->
+
+            <div class="updated-time">
+              Last Updated<br>
+              <span id="updatedTime">Demo data</span>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+
+            <div class="metric-card">
+              <span class="metric-icon">🌡️</span>
+              <div>
+                <div class="metric-label">Temperature</div>
+                <div class="metric-value"><%= temperature %></div>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <span class="metric-icon">💧</span>
+              <div>
+                <div class="metric-label">Humidity</div>
+                <div class="metric-value"><%= humidity %></div>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <span class="metric-icon">♨️</span>
+              <div>
+                <div class="metric-label">Land Surface Temp.</div>
+                <div class="metric-value"><%= landSurfaceTemp %></div>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <span class="metric-icon">🌿</span>
+              <div>
+                <div class="metric-label">Vegetation Cover</div>
+                <div class="metric-value"><%= vegetation %></div>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <span class="metric-icon">👥</span>
+              <div>
+                <div class="metric-label">Population Vulnerability</div>
+                <div class="metric-value"><%= vulnerability %></div>
+              </div>
+            </div>
+
+            
+        <div class="metric-card">
+            <span class="metric-icon">🔥</span>
+            <div>
+                <div class="metric-label">Predicted Heat Index</div>
+                <div class="metric-value"><%= predictedHeatIndex %></div>
+            </div>
+        </div>
+          </div>
+
+          <div class="insights-grid">
+
+            <section class="insight-card factors-card">
+              <h3><span>🛡️</span> Key Contributing Factors</h3>
+              <ul>
+                <% factors.forEach(function(factor) { %>
+                  <li><%= factor %></li>
+                <% }); %>
+              </ul>
+            </section>
+
+            <section class="insight-card precautions-card">
+              <h3><span>🛡️</span> Recommended Precautions</h3>
+              <ul>
+                <% precautions.forEach(function(precaution) { %>
+                  <li><%= precaution %></li>
+                <% }); %>
+              </ul>
+            </section>
+
+          </div>
+
+          <div class="disclaimer">
+            These values are demonstration data, not live weather observations or validated medical predictions.
+          </div>
+
+          <a href="/map" class="back-link">← Back to Risk Map</a>
+
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const selectedArea = <%- JSON.stringify(selectedArea) %>;
+    const selectedRisk = <%- JSON.stringify(riskLevel) %>;
+    const areaLocations = {
+    "Aundh": [18.5600, 73.8070],
+    "Yerawada": [18.5500, 73.8780],
+    "Shivajinagar": [18.5308, 73.8475],
+    "Deccan": [18.5158, 73.8405],
+    "Camp": [18.5130, 73.8790],
+    "Kothrud": [18.5074, 73.8077],
+    "Hadapsar": [18.5089, 73.9259],
+    "Hinjawadi": [18.5913, 73.7389],
+    "Koregaon Park": [18.5362, 73.8939],
+    "Pune Station": [18.5289, 73.8744],
+    "Swargate": [18.5018, 73.8636],
+    "Baner": [18.5590, 73.7868],
+    "Wakad": [18.5975, 73.7898],
+    "Katraj": [18.4529, 73.8660]
+};
+
+    const analysisMap = L.map("analysisMap", {
+      scrollWheelZoom: true
+    }).setView([18.5204, 73.8567], 12);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(analysisMap);
+
+    const colors = {
+      "Low": "#65bd54",
+      "Moderate": "#ffdc45",
+      "High": "#f79438",
+      "Very High": "#e63940"
+    };
+
+
+    
+    
+const neighbourhoodPredictions = {};
+
+function getRiskColor(riskLevel) {
+  const risk = String(riskLevel || "").trim().toLowerCase();
+
+  const riskColors = {
+    "low": "#65bd54",
+    "moderate": "#ffdc45",
+    "high": "#f79438",
+    "very high": "#e63940"
+  };
+
+  return riskColors[risk] || "#999999";
+}
+
+
+
+async function loadHeatMapPredictions() {
+  try {
+    const requestedTime = "2026-10-10 12:00:00";
+
+    const response = await fetch(
+      "/api/heat-map?time=" + encodeURIComponent(requestedTime),
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Accept": "application/json"
+        }
+      }
+    );
+
+    const result = await response.json();
+
+    console.log("Heat Map API Response:", result);
+
+    if (!response.ok) {
+      throw new Error(
+        result.message || `HTTP ${response.status}`
+      );
+    }
+
+    if (!result.success || !Array.isArray(result.data)) {
+      throw new Error("Invalid heat-map API response");
+    }
+
+    result.data.forEach(function (area) {
+      const areaName = String(area.name || "")
+        .trim()
+        .toLowerCase();
+
+      if (!areaName) return;
+
+      neighbourhoodPredictions[areaName] = {
+        riskLevel: area.riskLevel,
+        predictedHeatIndex: area.predictedHeatIndex,
+        time: area.time,
+        coordinates: area.coordinates,
+        matchedCoordinates: area.matchedCoordinates
+      };
+    });
+
+    console.log(
+      "Processed neighbourhood predictions:",
+      neighbourhoodPredictions
+    );
+
+  } catch (error) {
+    console.error(
+      "Could not load neighbourhood predictions:",
+      error
+    );
+  }
+}
+
+
+
+    // Illustrative demo polygons. Replace with official GeoJSON boundaries
+    // before using this map for real-world risk analysis.
+    const areaGeoJSON = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {"name":"Aundh","risk":"Moderate"},
+          "geometry":{"type":"Polygon","coordinates":[[
+            [73.800,18.600],[73.835,18.605],[73.855,18.575],
+            [73.840,18.550],[73.815,18.535],[73.800,18.600]
+          ]]}
+        },
+        {
+          "type": "Feature",
+          "properties": {"name":"Yerawada","risk":"High"},
+          "geometry":{"type":"Polygon","coordinates":[[
+            [73.855,18.575],[73.885,18.580],[73.905,18.550],
+            [73.895,18.520],[73.875,18.520],[73.855,18.535],
+            [73.855,18.575]
+          ]]}
+        },
+        {
+          "type": "Feature",
+          "properties": {"name":"Shivajinagar","risk":"Very High"},
+          "geometry":{"type":"Polygon","coordinates":[[
+            [73.815,18.535],[73.840,18.550],[73.855,18.535],
+            [73.875,18.520],[73.860,18.495],[73.825,18.500],
+            [73.805,18.515],[73.815,18.535]
+          ]]}
+        },
+        {
+          "type": "Feature",
+          "properties": {"name":"Deccan","risk":"High"},
+          "geometry":{"type":"Polygon","coordinates":[[
+            [73.805,18.515],[73.825,18.500],[73.860,18.495],
+            [73.870,18.470],[73.845,18.455],[73.815,18.475],
+            [73.805,18.515]
+          ]]}
+        },
+        {
+          "type": "Feature",
+          "properties": {"name":"Camp","risk":"Moderate"},
+          "geometry":{"type":"Polygon","coordinates":[[
+            [73.860,18.495],[73.875,18.520],[73.895,18.520],
+            [73.915,18.490],[73.900,18.465],[73.870,18.470],
+            [73.860,18.495]
+          ]]}
+        }
+      ]
+    };
+
+    const geojsonLayer = L.geoJSON(areaGeoJSON, {
+style: function(feature) {
+  const areaName = String(feature.properties.name || "")
+    .trim()
+    .toLowerCase();
+
+  const prediction = neighbourhoodPredictions[areaName];
+
+  const risk = prediction
+    ? prediction.riskLevel
+    : feature.properties.risk;
+
+  return {
+    color: "#ffffff",
+    weight: 2,
+    fillColor: getRiskColor(risk),
+    fillOpacity: 0.85
+  };
+},
+
+
+
+      onEachFeature: function(feature, layer) {
+        layer.bindTooltip(feature.properties.name, {
+          permanent: true,
+          direction: "center",
+          className: "area-label"
+        });
+
+        layer.bindPopup(
+          "<strong>" + feature.properties.name +
+          "</strong><br>Risk level: " + feature.properties.risk
+        );
+      }
+    }).addTo(analysisMap);
+
+    const matchingArea = areaGeoJSON.features.find(function(feature) {
+      return feature.properties.name.toLowerCase() === selectedArea.toLowerCase();
+    });
+
+   const normalizedArea = String(selectedArea || "").trim().toLowerCase();
+
+
+
+const selectedLocation = Object.keys(areaLocations).find(function(area) {
+  return area.toLowerCase() === normalizedArea;
+});
+
+if (matchingArea) {
+
+  // Selected area exists in GeoJSON: highlight its polygon
+  const selectedLayer = L.geoJSON(matchingArea, {
+    style: {
+      color: "#ffffff",
+      weight: 3,
+      fillColor: colors[selectedRisk] || colors[matchingArea.properties.risk],
+      fillOpacity: 0.9
+    }
+  }).addTo(analysisMap);
+
+  analysisMap.fitBounds(selectedLayer.getBounds(), {
+    padding: [20, 20],
+    maxZoom: 14
+  });
+
+  selectedLayer.bindPopup(
+    "<strong>" + matchingArea.properties.name +
+    "</strong><br>Risk level: " + matchingArea.properties.risk
+  ).openPopup();
+
+} else if (selectedLocation) {
+
+  // Selected area has coordinates but no polygon: show a marker
+  const location = areaLocations[selectedLocation];
+
+  analysisMap.setView(location, 14);
+
+  L.marker(location)
+    .addTo(analysisMap)
+    .bindPopup(
+      "<strong>" + selectedArea +
+      "</strong><br>Area location"
+    )
+    .openPopup();
+
+} else {
+
+  // Location not found
+  analysisMap.setView([18.5204, 73.8567], 12);
+
+  L.popup()
+    .setLatLng([18.5204, 73.8567])
+    .setContent("Location not found. Showing Pune.")
+    .openOn(analysisMap);
+}
+  loadHeatMapPredictions();
+  </script>
+
+</body>
+</html>

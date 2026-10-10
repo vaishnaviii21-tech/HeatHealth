@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Select Area | Heat-Health Risk</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;color:#123b65;background:#f0f7fd}
+.navbar{height:72px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 36px;box-shadow:0 2px 8px rgba(20,55,90,.06)}
+.brand{font-size:16px;font-weight:700;color:#083b70;text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:34px}
+.nav-links a{color:#123b65;font-size:13px;text-decoration:none}
+.page-layout{display:grid;grid-template-columns:285px minmax(0,1fr);gap:14px;padding:18px;min-height:calc(100vh - 72px)}
+.sidebar{display:flex;flex-direction:column;gap:12px}
+.card{background:#fff;border:1px solid #d9e8f5;border-radius:13px;padding:17px;box-shadow:0 4px 14px rgba(30,70,110,.06)}
+.card h3{font-size:14px;margin:0 0 15px;color:#123b65}
+.city-value{padding:14px 12px;background:#e5f1ff;border-radius:8px;font-size:13px}
+.field-label{display:block;font-size:13px;font-weight:600;margin-bottom:10px}
+select,input{width:100%;min-width:0;height:44px;border:1px solid #cbdced;border-radius:7px;padding:0 12px;background:#fff;color:#123b65;font-size:14px;outline-color:#0d4b82}
+.primary-btn{width:100%;height:41px;border:0;border-radius:7px;background:#104d83;color:#fff;font-weight:700;font-size:14px;cursor:pointer;margin-top:12px}
+.primary-btn:hover{background:#083b69}
+.help-card{background:#eff7ff}
+.help-card h3{font-size:15px}
+.help-card ol{padding-left:19px;margin:0;font-size:12px;line-height:1.9}
+.map-panel{min-width:0;height:650px;position:relative;background:#e9f2f7;border:1px solid #d9e8f5;border-radius:13px;overflow:hidden;box-shadow:0 4px 14px rgba(30,70,110,.06)}
+.map-search{position:absolute;z-index:500;top:13px;left:52px;display:flex;gap:7px;width:min(350px,calc(100% - 70px))}
+.map-search input{flex:1;width:0}
+.search-btn{height:40px;padding:0 14px;background:white;border:1px solid #cbdced;border-radius:7px;color:#123b65;cursor:pointer}
+#areaMap{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.selected-area-tag{position:absolute;z-index:500;left:12px;bottom:12px;background:white;border-radius:7px;padding:10px 13px;box-shadow:0 2px 8px #0000001a;font-size:12px}
+.risk-legend{position:absolute;z-index:500;right:12px;bottom:12px;background:white;border-radius:8px;padding:11px;box-shadow:0 2px 8px #0000001a;font-size:12px;line-height:1.9}
+.legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.status-message{margin-top:9px;color:#a33a2b;font-size:12px}
+.leaflet-tooltip{font-weight:bold;border:0;box-shadow:0 1px 4px #0002}
+@media(max-width:760px){.navbar{padding:12px 16px;height:auto;min-height:65px;gap:12px;flex-wrap:wrap}.brand{font-size:14px}.nav-links{gap:14px;padding:10px 0}.page-layout{grid-template-columns:1fr;padding:12px}.map-panel{height:480px}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a class="brand" href="/">🌡️ Hyperlocal Heat-Health Risk Prediction</a>
+  <div class="nav-links">
+    <a href="/">Home</a><a href="/#about">About</a><a href="/login">Logout</a>
+  </div>
+</nav>
+
+<main class="page-layout">
+  <aside class="sidebar">
+    <section class="card">
+      <h3>Selected City</h3>
+      <div class="city-value">📍 <span id="cityName">Pune, Maharashtra</span></div>
+    </section>
+    <section class="card">
+      <h3>Select Neighbourhood / Area</h3>
+      <label class="field-label" for="areaSelect">Neighbourhood / Area</label>
+      <select id="areaSelect">
+        <option>Shivajinagar</option><option>Kothrud</option><option>Hadapsar</option>
+        <option>Hinjawadi</option><option>Koregaon Park</option><option>Pune Station</option>
+        <option>Swargate</option><option>Baner</option><option>Wakad</option><option>Katraj</option>
+      </select>
+      <button class="primary-btn" id="showMapBtn" type="button">Show on Map</button>
+      <div id="statusMessage" class="status-message" role="status"></div>
+    </section>
+    <section class="card help-card">
+      <h3>💡 How to use?</h3>
+      <ol>
+        <li>Select an area from the dropdown or search on the map.</li>
+        <li>Click "Show on Map" to view the selected location.</li>
+        <li>Click "Analyse Risk" to continue to the analysis page.</li>
+      </ol>
+      <button class="primary-btn" id="analyseBtn" type="button">Analyse Risk →</button>
+    </section>
+  </aside>
+
+  <section class="map-panel">
+    <form class="map-search" id="searchForm">
+      <input type="text" id="areaSearch" placeholder="Search area..." aria-label="Search area">
+      <button class="search-btn" type="submit">Search</button>
+    </form>
+    <div id="areaMap" aria-label="Interactive Pune map"></div>
+    <div class="selected-area-tag">Selected area: <strong id="selectedAreaLabel">Shivajinagar</strong></div>
+    <div class="risk-legend">
+      <div><span class="legend-dot" style="background:#e53935"></span>High Risk</div>
+      <div><span class="legend-dot" style="background:#fb8c00"></span>Medium Risk</div>
+      <div><span class="legend-dot" style="background:#2e9d50"></span>Low Risk</div>
+    </div>
+  </section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const city=params.get("city")||"Pune, Maharashtra";
+document.getElementById("cityName").textContent=city;
+
+const areas={
+ "Shivajinagar":{coords:[18.5308,73.8475],risk:"High",color:"#e53935"},
+ "Kothrud":{coords:[18.5074,73.8077],risk:"Medium",color:"#fb8c00"},
+ "Hadapsar":{coords:[18.5089,73.9259],risk:"High",color:"#e53935"},
+ "Hinjawadi":{coords:[18.5913,73.7389],risk:"Medium",color:"#fb8c00"},
+ "Koregaon Park":{coords:[18.5362,73.8939],risk:"Low",color:"#2e9d50"},
+ "Pune Station":{coords:[18.5289,73.8744],risk:"High",color:"#e53935"},
+ "Swargate":{coords:[18.5018,73.8636],risk:"Medium",color:"#fb8c00"},
+ "Baner":{coords:[18.5590,73.7868],risk:"Low",color:"#2e9d50"},
+ "Wakad":{coords:[18.5975,73.7639],risk:"Medium",color:"#fb8c00"},
+ "Katraj":{coords:[18.4575,73.8677],risk:"Medium",color:"#fb8c00"}
+};
+
+const map=L.map("areaMap").setView([18.5204,73.8567],12);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+ maxZoom:19,attribution:'&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+/* Demo GeoJSON polygons; approximate illustrations, not official boundaries. */
+const geoData={type:"FeatureCollection",features:[
+{name:"Shivajinagar",c:[[73.832,18.541],[73.849,18.545],[73.864,18.535],[73.865,18.520],[73.854,18.509],[73.837,18.513],[73.827,18.526],[73.832,18.541]]},
+{name:"Kothrud",c:[[73.788,18.517],[73.807,18.524],[73.823,18.515],[73.826,18.500],[73.813,18.491],[73.793,18.497],[73.788,18.517]]},
+{name:"Hadapsar",c:[[73.910,18.520],[73.930,18.524],[73.943,18.512],[73.940,18.497],[73.923,18.491],[73.908,18.502],[73.910,18.520]]},
+{name:"Hinjawadi",c:[[73.723,18.603],[73.741,18.611],[73.757,18.601],[73.756,18.584],[73.741,18.577],[73.725,18.586],[73.723,18.603]]},
+{name:"Koregaon Park",c:[[73.881,18.544],[73.897,18.548],[73.907,18.537],[73.902,18.523],[73.887,18.521],[73.878,18.532],[73.881,18.544]]},
+{name:"Pune Station",c:[[73.863,18.537],[73.878,18.540],[73.885,18.529],[73.880,18.517],[73.866,18.518],[73.858,18.528],[73.863,18.537]]},
+{name:"Swargate",c:[[73.851,18.510],[73.868,18.514],[73.878,18.503],[73.874,18.490],[73.858,18.488],[73.847,18.498],[73.851,18.510]]},
+{name:"Baner",c:[[73.772,18.568],[73.789,18.574],[73.801,18.563],[73.797,18.548],[73.781,18.545],[73.770,18.555],[73.772,18.568]]},
+{name:"Wakad",c:[[73.750,18.606],[73.767,18.612],[73.780,18.602],[73.777,18.588],[73.762,18.582],[73.749,18.591],[73.750,18.606]]},
+{name:"Katraj",c:[[73.854,18.466],[73.872,18.469],[73.881,18.458],[73.875,18.445],[73.859,18.444],[73.850,18.454],[73.854,18.466]]}
+].map(a=>({type:"Feature",properties:{name:a.name},geometry:{type:"Polygon",coordinates:[[...a.c.map(p=>[p[0],p[1]])]]}}))};
+
+const markers={};
+const geoLayer=L.geoJSON(geoData,{
+ style:f=>({color:"#fff",weight:2,fillColor:areas[f.properties.name].color,fillOpacity:.48}),
+ onEachFeature:(f,layer)=>{
+   const name=f.properties.name, area=areas[name];
+   layer.bindTooltip(name,{permanent:true,direction:"center"});
+   layer.bindPopup("<strong>"+name+"</strong><br>Sample heat-risk level: <strong>"+area.risk+"</strong><br><small>Demo data, not a live prediction.</small>");
+   layer.on("click",()=>selectArea(name,false));
+ }
+}).addTo(map);
+
+Object.entries(areas).forEach(([name,area])=>{
+ const marker=L.marker(area.coords).addTo(map);
+ marker.bindPopup("<strong>"+name+"</strong><br>Sample heat-risk level: <strong>"+area.risk+"</strong>");
+ marker.on("click",()=>selectArea(name,false));
+ markers[name.toLowerCase()]=marker;
+});
+
+const areaSelect=document.getElementById("areaSelect");
+const statusMessage=document.getElementById("statusMessage");
+
+function selectArea(name,showMessage=true){
+ const matched=Object.keys(areas).find(a=>a.toLowerCase()===name.trim().toLowerCase());
+ if(!matched){statusMessage.textContent="Area not in the demo list. Try another area.";return;}
+ areaSelect.value=matched;
+ document.getElementById("selectedAreaLabel").textContent=matched;
+ statusMessage.textContent="";
+ map.flyTo(areas[matched].coords,14,{duration:.6});
+ markers[matched.toLowerCase()].openPopup();
+ if(showMessage)statusMessage.textContent="Showing "+matched+" on the map.";
+}
+
+document.getElementById("showMapBtn").addEventListener("click",()=>selectArea(areaSelect.value));
+document.getElementById("searchForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const q=document.getElementById("areaSearch").value.trim();
+ if(!q){statusMessage.textContent="Please enter an area name.";return;}
+ selectArea(q);
+});
+document.getElementById("analyseBtn").addEventListener("click",()=>{
+ location.href="/analysis?city="+encodeURIComponent(city)+"&area="+encodeURIComponent(areaSelect.value);
+});
+const requested=params.get("area");
+selectArea(requested&&areas[requested]?requested:"Shivajinagar",false);
+setTimeout(()=>map.invalidateSize(),200);
+</script>
+</body>
+</html>

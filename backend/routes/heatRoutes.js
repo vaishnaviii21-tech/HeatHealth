@@ -2,7 +2,10 @@ const express = require("express");
 const router = express.Router();
 const isAuthenticated = require("../middleware/isAuthenticated");
 const Neighbourhood = require("../models/Neighbourhood");
-const { analyseHeatRisk } = require("../controllers/heatController");
+const {
+    analyseHeatRisk,
+    getNeighbourhoodHeatPredictions
+} = require("../controllers/heatController");
 
 // GET API: Retrieve all neighbourhoods
 router.get("/neighbourhoods", isAuthenticated, async (req, res) => {
@@ -53,5 +56,12 @@ router.post("/neighbourhoods", isAuthenticated, async (req, res) => {
 });
 
 router.post("/heat-analysis", isAuthenticated, analyseHeatRisk);
+
+//color route
+router.get(
+    "/heat-map",
+    isAuthenticated,
+    getNeighbourhoodHeatPredictions
+);
 
 module.exports = router;

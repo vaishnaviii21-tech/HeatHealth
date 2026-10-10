@@ -1,2 +1,22 @@
+
+# Environment secrets
 .env
-node_modules
+.env.*
+!.env.example
+
+# Node.js dependencies
+node_modules/
+
+# Python environment
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local logs
+npm-debug.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -57,7 +57,6 @@ const { name, email, password } = req.body;
 
 });
 
-//login route
 router.post("/login", (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
         if (err) {
@@ -88,7 +87,6 @@ router.post("/login", (req, res, next) => {
         });
     })(req, res, next);
 });
-
 
 //logout
 // Logout API
